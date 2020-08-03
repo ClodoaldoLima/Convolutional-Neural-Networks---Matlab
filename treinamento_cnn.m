@@ -73,6 +73,7 @@ for nep = 1:epocasMax
                 indcong=camada.indcongFiltros; %individuos congelados
                 txcong=camada.txcongFiltros; %taxa de individuos
                 [ativacao,dfativ]= dropout(ativacao,dfativ,indcong,txcong); %ativação para proxima camada
+                
             elseif (strcmp(camada.tipo,'p'))  % Camada de Pooling
                 strider = camada.strider;
                 criterio=camada.criterio;
@@ -84,7 +85,6 @@ for nep = 1:epocasMax
                 end
             elseif (strcmp(camada.tipo,'f'))  %Camada totalmente conectada
                 fativ = camada.fativ;
-                save all
                 [ativacao,dfativ] = cnnfull(ativacao,camada.W,camada.b,fativ);
                 cont=1; %Sinaliza que os dados foram concatenados
             end
@@ -154,6 +154,7 @@ for nep = 1:epocasMax
         % Carrega dados da camada full salva delta na camada anterior
         % Outras camadas
         for l = numCamadas:-1:1
+            %fprintf('\nPropagando o erro para tras na camada %d',l)
             camada = cnn.camadas{l}; %
             if strcmp(camada.tipo,'f')
                 ativacao = cnn.camadas{l}.ativacao;
@@ -170,7 +171,6 @@ for nep = 1:epocasMax
                         dimSaidaY= size(cnn.camadas{l-1}.ativacao,2); % Numero de saida
                         numFiltros = cnn.camadas{l-1}.numFiltros; %Numero de filtros
                         delta_ant = reshape(delta,dimSaidaX,dimSaidaY,numFiltros,numImagens); %camada anterior
-                        
                     else
                         delta_ant = delta;
                     end
@@ -183,8 +183,8 @@ for nep = 1:epocasMax
             elseif strcmp(camada.tipo,'p') % camada pooling
                 if l>1
                     numFiltros = cnn.camadas{l-1}.numFiltros; %Numero de filtros da camada anterior
-                    dimSaida1 = size(cnn.camadas{l}.ativacao,1); %dimensao da saida
-                    dimSaida2 = size(cnn.camadas{l}.ativacao,2); %dimensao da saida                    
+                    dimSaida1 = size(cnn.camadas{l-1}.ativacao,1); %dimensao da saida
+                    dimSaida2 = size(cnn.camadas{l-1}.ativacao,2); %dimensao da saida      
                 else
                     numFiltros=cnn.imageCanal;
                     dimSaida1 = size(X,1); %dimensao da saida
@@ -192,8 +192,8 @@ for nep = 1:epocasMax
                 end
                 strider = cnn.camadas{l}.strider;
                 dimPool = cnn.camadas{l}.dimPool; %dimensão do poolin
-                convDim1 = dimSaida1*strider + dimPool-1;
-                convDim2 = dimSaida2*strider + dimPool-1;
+                convDim1 = dimSaida1;
+                convDim2 = dimSaida2;
                 criterio = cnn.camadas{l}.criterio;
                 deltaPool = delta_ant;
                 dfativ = cnn.camadas{l}.dfativ;
@@ -275,9 +275,11 @@ for nep = 1:epocasMax
                 Wc_grad = zeros(size(camada.W));
                 bc_grad = zeros(size(camada.b));
                 delta = camada.delta;
+               
+                
                 for fil2 = 1:numhidden
                     temp = delta(fil2,:);
-                    bc_grad(fil2) = sum(delta(:));
+                    bc_grad(fil2) = sum(temp(:));
                 end
                 
                 Wc_grad=delta*ativacao';
@@ -299,6 +301,7 @@ for nep = 1:epocasMax
                 bc_grad = zeros(size(camada.b));
                 DeltaConv = camada.delta;
                 strider=camada.strider;
+                
                 
                 for fil2 = 1:numFiltros2
                     for fil1 = 1:numFiltros1
