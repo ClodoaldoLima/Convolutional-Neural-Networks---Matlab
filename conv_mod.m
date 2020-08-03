@@ -1,7 +1,8 @@
 %***********************************************************************
 % Realiza Convolução, mas não rotaciona os kernels
 %*******************************************************************
-function [Conv,dConv]=conv_mod(img,mask,strider)
+%function [Conv,dConv]=conv_mod(img,mask,strider)
+function Conv=conv_mod(img,mask,strider)
 [m1,n1]=size(img);
 [m2,n2]=size(mask);
 
@@ -19,4 +20,4 @@ for i=1:mConv,
     x=x+strider;
     y=1;
 end
-dConv = zeros(mConv,nConv); %não precisa armazenar a derivada de convolução
+%dConv = zeros(mConv,nConv); %não precisa armazenar a derivada de convolução
